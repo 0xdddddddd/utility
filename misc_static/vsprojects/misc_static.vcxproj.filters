@@ -1,0 +1,48 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <Filter Include="源文件">
+      <UniqueIdentifier>{784f6527-e9c6-429d-b60b-71640b98e287}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="头文件">
+      <UniqueIdentifier>{87fe0d74-db0f-48bc-adef-17ca5933e7a8}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="源文件\进程相关">
+      <UniqueIdentifier>{f1464f79-e3d9-4549-9bd8-45378bb5be97}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="头文件\进程相关">
+      <UniqueIdentifier>{eb14de1a-6813-4202-b039-c12d0905102c}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="common">
+      <UniqueIdentifier>{efa6a4dd-d761-4c8d-a173-accb877b9f2e}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="头文件\调试打印">
+      <UniqueIdentifier>{7999332e-c845-4416-a094-9110eaa2b422}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="源文件\调试打印">
+      <UniqueIdentifier>{f3ae8e84-ff16-445e-89e6-7457ffc72d90}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="..\..\source\process\processenv.cpp">
+      <Filter>源文件\进程相关</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\source\debuger\debuger.cpp">
+      <Filter>源文件\调试打印</Filter>
+    </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="..\..\..\public\platform.h">
+      <Filter>common</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\include\process\processenv.hpp">
+      <Filter>头文件\进程相关</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\include\misc_config.h">
+      <Filter>common</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\include\debuger\debuger.h">
+      <Filter>头文件\调试打印</Filter>
+    </ClInclude>
+  </ItemGroup>
+</Project>
