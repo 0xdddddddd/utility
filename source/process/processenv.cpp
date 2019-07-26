@@ -46,51 +46,69 @@ namespace Cry
 		return v.empty() == false;
 	}
 
-	Handle ProcessHelper::GetProcessHandle(uint32 Index, uint32 dwDesiredAccess, uint32 bInheritHandle)
+	Handle ProcessHelper::GetProcessHandle(uint32 Index, uint32 dwDesiredAccess, uint32 bInheritHandle) const
 	{
 		return OpenProcess(dwDesiredAccess, bInheritHandle, Index);
 	}
 
-	std::xstring ProcessHelper::GetDirectory(const std::xstring& lpWindowName, const std::xstring& lpClassName, const std::xstring& lpszProcessName)
+	bool ProcessHelper::GetDirectory(String ResultString[256], const std::xstring& lpWindowName, const std::xstring& lpClassName, const std::xstring& lpszProcessName) const
 	{
-		return this->GetDirectory(this->GetProcessIndex(lpWindowName, lpClassName, lpszProcessName));
+		return this->GetDirectory(this->GetProcessIndex(lpWindowName, lpClassName, lpszProcessName), ResultString);
 	}
-	std::xstring ProcessHelper::GetDirectory(uint32 Index)
+	bool ProcessHelper::GetDirectory(uint32 Index, PString ResultString, ulong StrSize) const
 	{
 		if (0 == Index)
 		{
-			return std::move(std::xstring());
+			return false;
 		}
-		if (Handle hHandle = GetProcessHandle(Index, PROCESS_QUERY_INFORMATION | PROCESS_VM_READ))
+		if (Handle hHandle = GetProcessHandle(Index, PROCESS_QUERY_INFORMATION | PROCESS_VM_READ); 0 != hHandle)
 		{
 			CloseHandleEx CloseHandle(hHandle);
 			{
-				ulong uResult;
-				Hinstance hModule;
-				String lpszFullDirectory[256];
-				if (EnumProcessModules(hHandle, &hModule, sizeof(hModule), &uResult))
+				String DosDirectoryName[8], DosDirectoryFull[256];
+
+				if (0 == GetProcessImageFileName(hHandle, DosDirectoryFull, StrSize))
 				{
-					if (GetModuleFileNameEx(hHandle, hModule, lpszFullDirectory, 256) > 0)
+					return false;
+				}
+
+				if (0 == GetLogicalDriveStrings(_countof(DosDirectoryName), DosDirectoryName))
+				{
+					return false;
+				}
+
+				for (String Drive = 'A'; Drive <= 'Z'; ++Drive)
+				{
+					DosDirectoryName[0] = Drive;
+					DosDirectoryName[1] = ':';
+					DosDirectoryName[2] = '\0';
+
+					if (0 == QueryDosDevice(DosDirectoryName, ResultString, StrSize))
 					{
-						return std::move(std::xstring(lpszFullDirectory));
+						continue;
+					}
+
+					if (0 == _tcsnicmp(ResultString, DosDirectoryFull, lstrlen(ResultString)))
+					{
+						lstrcpy(DosDirectoryFull, DosDirectoryFull + lstrlen(ResultString));
+						lstrcpy(ResultString, DosDirectoryName);
+						lstrcat(ResultString, DosDirectoryFull);
+						return GetFileAttributes(ResultString);
 					}
 				}
-				if (QueryFullProcessImageName(hHandle, 0, lpszFullDirectory, &uResult))
-				{
-					return std::move(std::xstring(lpszFullDirectory));
-				}
+				return QueryFullProcessImageName(hHandle, 0, ResultString, &StrSize);
 			}
 		}
-		return std::move(std::xstring());
+		return false;
 	}
 
-	std::xstring ProcessHelper::GetDirectory(const std::xstring& lpszProcessName, uint32 th32ProcessID)
+	bool ProcessHelper::GetDirectory(String ResultString[256], const std::xstring& lpszProcessName, uint32 th32ProcessID)
 	{
 		Handle hSnapshot = CreateToolhelp32Snapshot(TH32CS_SNAPPROCESS, th32ProcessID);
 		if (INVALID_HANDLE_VALUE == hSnapshot) {
-			return std::move(std::xstring());
+			return false;
 		}
-		return std::move([&](Handle hHandle, const std::xstring& lpszProcessName, uint32 ProcessIndex) -> std::xstring {
+		return [&](Handle hHandle, const std::xstring& lpszProcessName, uint32 ProcessIndex) -> bool {
 			CloseHandleEx CloseHandle(hHandle);
 			{
 				PROCESSENTRY32 ProcessEntry = { sizeof(ProcessEntry) };
@@ -98,15 +116,15 @@ namespace Cry
 				{
 					if (0 == _tcsicmp(ProcessEntry.szExeFile, lpszProcessName.c_str()))
 					{
-						return std::move(std::xstring(ProcessEntry.szExeFile));
+						return this->GetDirectory(0 == ProcessIndex ? (ProcessEntry.th32ProcessID == ProcessIndex ? ProcessIndex : ProcessEntry.th32ProcessID) : ProcessIndex, ResultString);
 					}
 				}
-				return std::move(this->GetDirectory(0 == ProcessIndex ? (ProcessEntry.th32ParentProcessID == ProcessIndex ? ProcessIndex : ProcessEntry.th32ParentProcessID) : ProcessIndex));
+				return false;
 			}
-		}(hSnapshot, lpszProcessName, th32ProcessID));
+		}(hSnapshot, lpszProcessName, th32ProcessID);
 	}
 
-	uint32 ProcessHelper::GetProcessIndex(const std::xstring& lpWindowName, const std::xstring& lpClassName, const std::xstring& lpszProcessName)
+	uint32 ProcessHelper::GetProcessIndex(const std::xstring& lpWindowName, const std::xstring& lpClassName, const std::xstring& lpszProcessName) const
 	{
 		ulong ProcIndex;
 		if (0 == GetWindowThreadProcessId(FindWindow(lpClassName.c_str(), lpWindowName.c_str()), &ProcIndex)) {
@@ -116,7 +134,7 @@ namespace Cry
 		return ProcIndex;
 	}
 
-	uint32 ProcessHelper::GetProcessIndex(const std::xstring& lpszProcessName, uint32 dwFlags, uint32 th32ProcessID)
+	uint32 ProcessHelper::GetProcessIndex(const std::xstring& lpszProcessName, uint32 dwFlags, uint32 th32ProcessID) const
 	{
 		Handle hSnapshot = CreateToolhelp32Snapshot(dwFlags, th32ProcessID);
 		if (INVALID_HANDLE_VALUE == hSnapshot) {

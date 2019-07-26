@@ -22,6 +22,12 @@
     <Filter Include="源文件\调试打印">
       <UniqueIdentifier>{f3ae8e84-ff16-445e-89e6-7457ffc72d90}</UniqueIdentifier>
     </Filter>
+    <Filter Include="源文件\文本处理">
+      <UniqueIdentifier>{fd386a7b-23fe-4c62-85c3-88be966f5c57}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="头文件\文本处理">
+      <UniqueIdentifier>{d30f0ccd-265d-4ab1-a26f-ef0137965471}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\..\source\process\processenv.cpp">
@@ -29,6 +35,9 @@
     </ClCompile>
     <ClCompile Include="..\..\source\debuger\debuger.cpp">
       <Filter>源文件\调试打印</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\source\text\TextTrim.cpp">
+      <Filter>源文件\文本处理</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -43,6 +52,9 @@
     </ClInclude>
     <ClInclude Include="..\..\include\debuger\debuger.h">
       <Filter>头文件\调试打印</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\include\text\TextTrim.h">
+      <Filter>头文件\文本处理</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>

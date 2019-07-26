@@ -21,12 +21,14 @@
   <ItemGroup>
     <ClCompile Include="..\..\source\debuger\debuger.cpp" />
     <ClCompile Include="..\..\source\process\processenv.cpp" />
+    <ClCompile Include="..\..\source\text\TextTrim.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\..\..\public\platform.h" />
     <ClInclude Include="..\..\include\debuger\debuger.h" />
     <ClInclude Include="..\..\include\misc_config.h" />
     <ClInclude Include="..\..\include\process\processenv.hpp" />
+    <ClInclude Include="..\..\include\text\TextTrim.h" />
   </ItemGroup>
   <PropertyGroup Label="Globals">
     <VCProjectVersion>16.0</VCProjectVersion>
@@ -112,7 +114,7 @@
       <PrecompiledHeaderFile>
       </PrecompiledHeaderFile>
       <LanguageStandard>stdcpp17</LanguageStandard>
-      <AdditionalIncludeDirectories>.\;..\..\..\public;..\..\include;..\..\include\process;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>.\;..\..\include;..\..\include\debuger;..\..\include\process;..\..\include\text;..\..\..\public;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
       <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
       <RuntimeLibrary>MultiThreadedDebug</RuntimeLibrary>
