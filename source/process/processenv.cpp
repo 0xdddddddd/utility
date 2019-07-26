@@ -1,7 +1,9 @@
 #include <processenv.hpp>
+#include <debuger\debuger.h>
+#include <future>
 namespace Cry
 {
-	bool ProcessHelper::CommandLineArgs(const std::xstring& CommandLine, std::vector<std::xstring>&& v)
+	bool ProcessBasic::CommandLineArgs(const std::xstring& CommandLine, std::vector<std::xstring>&& v)
 	{
 		String Buffer[256];
 		bool JumpSpace = false;
@@ -46,16 +48,21 @@ namespace Cry
 		return v.empty() == false;
 	}
 
-	Handle ProcessHelper::GetProcessHandle(uint32 Index, uint32 dwDesiredAccess, uint32 bInheritHandle) const
+	Handle ProcessBasic::GetProcessHandle(uint32 Index, uint32 dwDesiredAccess, uint32 bInheritHandle) const
 	{
 		return OpenProcess(dwDesiredAccess, bInheritHandle, Index);
 	}
 
-	bool ProcessHelper::GetDirectory(String ResultString[256], const std::xstring& lpWindowName, const std::xstring& lpClassName, const std::xstring& lpszProcessName) const
+	bool ProcessBasic::HideBreakpoint(Handle hThread)
+	{
+		return NT_SUCCESS(NtSetInformationThread(hThread, ThreadHideFromDebugger, 0, 0));
+	}
+
+	bool ProcessBasic::GetDirectory(String ResultString[256], const std::xstring& lpWindowName, const std::xstring& lpClassName, const std::xstring& lpszProcessName) const
 	{
 		return this->GetDirectory(this->GetProcessIndex(lpWindowName, lpClassName, lpszProcessName), ResultString);
 	}
-	bool ProcessHelper::GetDirectory(uint32 Index, PString ResultString, ulong StrSize) const
+	bool ProcessBasic::GetDirectory(uint32 Index, PString ResultString, ulong StrSize) const
 	{
 		if (0 == Index)
 		{
@@ -82,6 +89,7 @@ namespace Cry
 					DosDirectoryName[0] = Drive;
 					DosDirectoryName[1] = ':';
 					DosDirectoryName[2] = '\0';
+					DosDirectoryName[3] = '\0';
 
 					if (0 == QueryDosDevice(DosDirectoryName, ResultString, StrSize))
 					{
@@ -102,7 +110,7 @@ namespace Cry
 		return false;
 	}
 
-	bool ProcessHelper::GetDirectory(String ResultString[256], const std::xstring& lpszProcessName, uint32 th32ProcessID)
+	bool ProcessBasic::GetDirectory(String ResultString[256], const std::xstring& lpszProcessName, uint32 th32ProcessID)
 	{
 		Handle hSnapshot = CreateToolhelp32Snapshot(TH32CS_SNAPPROCESS, th32ProcessID);
 		if (INVALID_HANDLE_VALUE == hSnapshot) {
@@ -124,17 +132,43 @@ namespace Cry
 		}(hSnapshot, lpszProcessName, th32ProcessID);
 	}
 
-	uint32 ProcessHelper::GetProcessIndex(const std::xstring& lpWindowName, const std::xstring& lpClassName, const std::xstring& lpszProcessName) const
+	bool ProcessBasic::KillProcess(uint32 Index) const
 	{
-		ulong ProcIndex;
+		if (Handle hTaskHandler = this->GetProcessHandle(Index); 0 != hTaskHandler)
+		{
+			CloseHandleEx CloseHandle(hTaskHandler);
+			{
+				std::future AsyncObject = std::async([](const Handle TaskHandler) -> bool {
+					if (NTSTATUS ExitStatus = NtTerminateProcess(TaskHandler, 1); NT_SUCCESS(ExitStatus) || /* An attempt was made to access an exiting process. */ STATUS_PROCESS_IS_TERMINATING == ExitStatus)
+					{
+						return true;
+					}
+					return false;
+				}, hTaskHandler);
+				switch (MsgWaitForMultipleObjectsEx(1, &hTaskHandler, 3000, QS_ALLINPUT, MWMO_INPUTAVAILABLE))
+				{
+				case WAIT_OBJECT_0:		OutputMessage(TEXT("ÐÅºÅÏìÓ¦\n"));							break;
+				case WAIT_FAILED:		OutputMessage(TEXT("ÐÅºÅÊ§°Ü:%d\n"), GetLastError());		break;
+				case WAIT_TIMEOUT:																	break;
+				default:																			return false;
+				}
+				return AsyncObject.get();
+			}
+		}
+		return false;
+	}
+
+	uint32 ProcessBasic::GetProcessIndex(const std::xstring& lpWindowName, const std::xstring& lpClassName, const std::xstring& lpszProcessName) const
+	{
+		ulong ProcIndex = 0;
 		if (0 == GetWindowThreadProcessId(FindWindow(lpClassName.c_str(), lpWindowName.c_str()), &ProcIndex)) {
 
-			return true == lpszProcessName.empty() ? 0 : this->GetProcessIndex(lpszProcessName, TH32CS_SNAPPROCESS);
+			return true == lpszProcessName.empty() ? 0 : this->GetProcessIndex(lpszProcessName, TH32CS_SNAPPROCESS, ProcIndex);
 		}
 		return ProcIndex;
 	}
 
-	uint32 ProcessHelper::GetProcessIndex(const std::xstring& lpszProcessName, uint32 dwFlags, uint32 th32ProcessID) const
+	uint32 ProcessBasic::GetProcessIndex(const std::xstring& lpszProcessName, uint32 dwFlags, uint32 th32ProcessID) const
 	{
 		Handle hSnapshot = CreateToolhelp32Snapshot(dwFlags, th32ProcessID);
 		if (INVALID_HANDLE_VALUE == hSnapshot) {
