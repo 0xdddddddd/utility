@@ -39,6 +39,12 @@
     <ClCompile Include="..\..\source\text\TextTrim.cpp">
       <Filter>源文件\文本处理</Filter>
     </ClCompile>
+    <ClCompile Include="..\..\source\process\processrestart.cpp">
+      <Filter>源文件\进程相关</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\source\text\TextConve.cpp">
+      <Filter>源文件\文本处理</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\..\..\public\platform.h">
@@ -54,6 +60,12 @@
       <Filter>头文件\调试打印</Filter>
     </ClInclude>
     <ClInclude Include="..\..\include\text\TextTrim.h">
+      <Filter>头文件\文本处理</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\include\process\processrestart.h">
+      <Filter>头文件\进程相关</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\include\text\TextConve.h">
       <Filter>头文件\文本处理</Filter>
     </ClInclude>
   </ItemGroup>

@@ -21,6 +21,8 @@
   <ItemGroup>
     <ClCompile Include="..\..\source\debuger\debuger.cpp" />
     <ClCompile Include="..\..\source\process\processenv.cpp" />
+    <ClCompile Include="..\..\source\process\processrestart.cpp" />
+    <ClCompile Include="..\..\source\text\TextConve.cpp" />
     <ClCompile Include="..\..\source\text\TextTrim.cpp" />
   </ItemGroup>
   <ItemGroup>
@@ -28,6 +30,8 @@
     <ClInclude Include="..\..\include\debuger\debuger.h" />
     <ClInclude Include="..\..\include\misc_config.h" />
     <ClInclude Include="..\..\include\process\processenv.hpp" />
+    <ClInclude Include="..\..\include\process\processrestart.h" />
+    <ClInclude Include="..\..\include\text\TextConve.h" />
     <ClInclude Include="..\..\include\text\TextTrim.h" />
   </ItemGroup>
   <PropertyGroup Label="Globals">

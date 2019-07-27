@@ -26,7 +26,9 @@ namespace Cry
 		explicit ProcessBasic() {};
 	public:
 		// 获取自身进程的命令行
-		bool CommandLineArgs(const std::xstring& CommandLine, std::vector<std::xstring>&& v);
+		static bool CommandLineArgs(const std::xstring& CommandLine, std::vector<std::xstring>&& v);
+		// 提升权限
+		static bool AdjustPrivilege();
 		// 获取进程句柄
 		inline Handle GetProcessHandle(uint32 Index, uint32 dwDesiredAccess = PROCESS_ALL_ACCESS, uint32 bInheritHandle = 0) const;
 		// 占用断点

@@ -1,4 +1,4 @@
-#include <processenv.hpp>
+﻿#include <processenv.hpp>
 #include <debuger\debuger.h>
 #include <future>
 namespace Cry
@@ -47,9 +47,42 @@ namespace Cry
 		}
 		return v.empty() == false;
 	}
-
+	bool ProcessBasic::AdjustPrivilege()
+	{
+		Handle hToken = nullptr;
+		if (false == OpenProcessToken(GetCurrentProcess(), TOKEN_ADJUST_PRIVILEGES | TOKEN_QUERY, &hToken))
+		{
+			return false;
+		}
+		if (nullptr == hToken)
+		{
+			return false;
+		}
+		CloseHandleEx CloseHandle(hToken);
+		TOKEN_PRIVILEGES tp;
+		tp.PrivilegeCount = 1;
+		tp.Privileges[0].Attributes = SE_PRIVILEGE_ENABLED;
+		if (false == LookupPrivilegeValue(NULL, SE_DEBUG_NAME, &tp.Privileges[0].Luid))
+		{
+			return false;
+		}
+		return AdjustTokenPrivileges(hToken, FALSE, &tp, sizeof(TOKEN_PRIVILEGES), NULL, NULL);
+	}
 	Handle ProcessBasic::GetProcessHandle(uint32 Index, uint32 dwDesiredAccess, uint32 bInheritHandle) const
 	{
+		/*
+			PROCESS_TERMINATE			{允许 TerminateProcess 使用进程句柄来关闭进程}
+			PROCESS_CREATE_THREAD		{允许 CreateRemoteThread 使用进程句柄来创建线程}
+			PROCESS_VM_OPERATION		{允许 VirtualProtectEx 使用进程句柄来改变进程的虚拟内存}
+			PROCESS_VM_READ				{允许 ReadProcessMemory 使用进程句柄从进程的虚拟内存中读取数据}
+			PROCESS_VM_WRITE			{允许 WriteProcessMemory 使用进程句柄向进程的虚拟内存中写入数据}
+			PROCESS_DUP_HANDLE			{允许 DuplicateHandle 把进程句柄当作源句柄或目标句柄进行复制}
+			PROCESS_CREATE_PROCESS		{默认值}
+			PROCESS_SET_QUOTA			{允许 SetProcessWorkingSetSize 使用进程句柄设置虚拟内存的上限值}
+			PROCESS_SET_INFORMATION		{允许 SetPriorityClass 使用进程句柄来设置进程优先级}
+			PROCESS_QUERY_INFORMATION	{允许 GetExitCodeProcess 或 GetPriorityClass 通过进程句柄读取进程信息}
+			SYNCHRONIZE					{允许任何等待的函数使用进程句柄}
+		*/
 		return OpenProcess(dwDesiredAccess, bInheritHandle, Index);
 	}
 
@@ -134,7 +167,7 @@ namespace Cry
 
 	bool ProcessBasic::KillProcess(uint32 Index) const
 	{
-		if (Handle hTaskHandler = this->GetProcessHandle(Index); 0 != hTaskHandler)
+		if (Handle hTaskHandler = this->GetProcessHandle(Index, PROCESS_TERMINATE | SYNCHRONIZE); 0 != hTaskHandler)
 		{
 			CloseHandleEx CloseHandle(hTaskHandler);
 			{
@@ -147,8 +180,8 @@ namespace Cry
 				}, hTaskHandler);
 				switch (MsgWaitForMultipleObjectsEx(1, &hTaskHandler, 3000, QS_ALLINPUT, MWMO_INPUTAVAILABLE))
 				{
-				case WAIT_OBJECT_0:		OutputMessage(TEXT("�ź���Ӧ\n"));							break;
-				case WAIT_FAILED:		OutputMessage(TEXT("�ź�ʧ��:%d\n"), GetLastError());		break;
+				case WAIT_OBJECT_0:		OutputMessage(TEXT("信号响应\n"));							break;
+				case WAIT_FAILED:		OutputMessage(TEXT("信号失败:%d\n"), GetLastError());		break;
 				case WAIT_TIMEOUT:																	break;
 				default:																			return false;
 				}
